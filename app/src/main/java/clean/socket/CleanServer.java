@@ -13,7 +13,7 @@ public class CleanServer {
 
     public static void main(String[] args) {
         try {
-            Map<String, List<String>> params = setParams(args);
+            setParams(args);
             CleanServer server = new CleanServer();
             server.start(port);
         } catch (Exception e) {

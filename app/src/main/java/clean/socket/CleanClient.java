@@ -32,10 +32,14 @@ public class CleanClient {
     }
 
     public String sendMessage(String msg) {
-        out.println(msg);
         try {
-            String resp = in.readLine();
-            return resp;
+            out.println(msg);
+            StringBuilder resp = new StringBuilder();
+            while (in.ready()){
+                String str = in.readLine();
+                resp.append(str).append("\r\n");
+            }
+            return resp.toString();
         } catch (IOException e) {
             e.printStackTrace();
             return "Error";
