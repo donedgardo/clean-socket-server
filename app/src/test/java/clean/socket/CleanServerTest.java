@@ -1,23 +1,21 @@
 package clean.socket;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.*;
 
 public class CleanServerTest {
 
-    private CleanClient client;
+    private static CleanClient client;
 
-    @Before
-    public void setup(){
+    @BeforeClass
+    public static void setup(){
         client = new CleanClient();
         client.startConnection("127.0.0.1", 3000);
     }
 
-    @After
-    public void tearDown(){
+    @AfterClass
+    public static void tearDown(){
         client.stopConnection();
     }
 
