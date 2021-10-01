@@ -1,44 +1,47 @@
 package clean.socket;
+
 import java.io.*;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 class CleanClientHandler extends Thread {
+    private final String publicDirectory;
+    private final ConcurrentHashMap<String, SessionData> sessionData;
     private Socket clientSocket;
     private BufferedReader in;
-    private OutputStream outStream;
+    private OutputStream out;
 
-    public CleanClientHandler(Socket socket) throws IOException {
+    public CleanClientHandler(Socket socket, String publicDirectory, ConcurrentHashMap<String, SessionData> sessionData) throws IOException {
         clientSocket = socket;
+        this.publicDirectory = publicDirectory;
+        this.sessionData = sessionData;
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        outStream = new DataOutputStream(clientSocket.getOutputStream());
+        out = new DataOutputStream(clientSocket.getOutputStream());
     }
 
     public void run() {
         try {
-            String rawRequest = getRawRequest();
-            String responseStatusHeader = "HTTP/1.1 200 OK\r\n";
-            String responseTypeHeader = "Content-Type: text/html\r\n";
-            String responseHtml = "<html><body><p>Welcome Screen!</p></body></html>\r\n";
-            String responseLength = "Content-Length: " + responseHtml.length() + "\r\n";
-            String responseConnection = "Connection: keep-alive\r\n";
-            String rawResponse = responseStatusHeader + responseTypeHeader +
-                    responseLength + responseConnection + "\r\n" + responseHtml;
-            outStream.write(rawResponse.getBytes());
-            outStream.flush();
+            CleanHttpRequest request = new CleanHttpRequest(in);
+            var router = new HashMap<String, RequestHandler>() {{
+                put("/hello", new HTMLRequestHandler(out, "Welcome Screen!"));
+                put("/ping", new PingRequestHandler(out));
+                put("/guess", new GuessRequestHandler(out, request, sessionData));
+                put("*", new FileRequestHandler(out, request, publicDirectory));
+            }};
+            var route = request.getPath();
+            if (!router.containsKey(route))
+                route = "*";
+            router.get(route).handle();
+            out.flush();
             in.close();
-            outStream.close();
+            out.close();
             clientSocket.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            System.out.println("Error in run");
             e.printStackTrace();
         }
     }
 
-    private String getRawRequest() throws IOException {
-        StringBuilder rawRequest = new StringBuilder();
-        while (in.ready()) {
-            rawRequest.append(in.readLine()).append("\r\n");
-        }
-        return rawRequest.toString();
-    }
 }

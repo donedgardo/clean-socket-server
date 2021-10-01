@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CleanServer {
     private static int port;
+    private static String publicDirectory;
     private ServerSocket serverSocket;
 
     public static void main(String[] args) {
@@ -24,8 +26,9 @@ public class CleanServer {
     public void start(int port) {
         try {
             serverSocket = new ServerSocket(port);
+            ConcurrentHashMap<String, SessionData> sessionData = new ConcurrentHashMap<>();
             while (true)
-                new CleanClientHandler(serverSocket.accept()).start();
+                new CleanClientHandler(serverSocket.accept(), publicDirectory, sessionData).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,8 +60,6 @@ public class CleanServer {
                 System.err.println("Illegal parameter usage");
             }
         }
-
-
         List<String> portArg = params.get("p");
         if(portArg == null) {
             String errorMsg = "Required port -p argument not provided.";
@@ -66,7 +67,14 @@ public class CleanServer {
             throw new Exception(errorMsg);
         }
 
+        List<String> dirArg = params.get("r");
+        if(dirArg == null) {
+            String errorMsg = "Required root directory -r argument not provided.";
+            System.err.println(errorMsg);
+            throw new Exception(errorMsg);
+        }
         port = Integer.parseInt(portArg.get(0));
+        publicDirectory = dirArg.get(0);
         return params;
     }
 
