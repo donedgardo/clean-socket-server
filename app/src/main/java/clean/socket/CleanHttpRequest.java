@@ -7,10 +7,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CleanHttpRequest {
     private static final String POST_METHOD = "POST";
     private final BufferedReader in;
+    private final ConcurrentHashMap<String, SessionData> sessionsData;
     private String method;
     private String path;
     private String protocol;
@@ -19,8 +21,9 @@ public class CleanHttpRequest {
     private Map<String, String> postData = new HashMap<>();
     private Map<String, String> cookies;
 
-    public CleanHttpRequest(BufferedReader in) throws Exception {
+    public CleanHttpRequest(BufferedReader in, ConcurrentHashMap<String, SessionData> sessionsData) throws Exception {
         this.in = in;
+        this.sessionsData = sessionsData;
         setRequestProperties();
     }
 
@@ -42,6 +45,10 @@ public class CleanHttpRequest {
 
     public Map<String, String> getCookies () {
         return cookies;
+    }
+
+    public ConcurrentHashMap<String, SessionData> getSessionData() {
+        return sessionsData;
     }
 
     private void setRequestProperties() throws Exception {

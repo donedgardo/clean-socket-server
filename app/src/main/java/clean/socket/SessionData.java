@@ -15,7 +15,7 @@ public class SessionData {
     }
 
     public void attemptGuess(String guess) {
-        if (guess == null) {
+        if (!isValidGuessInput(guess)) {
             guessMessage = "";
             return;
         }
@@ -30,6 +30,10 @@ public class SessionData {
         } else {
             updateGuessMessage(guess);
         }
+    }
+
+    private boolean isValidGuessInput(String guess) {
+        return guess != null && !guess.trim().equals("");
     }
 
     private void updateGuessMessage(String guess) {

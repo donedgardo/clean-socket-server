@@ -17,18 +17,24 @@ public class CleanServer {
         try {
             setParams(args);
             CleanServer server = new CleanServer();
-            server.start(port);
+            HashMap<String, RequestHandler> router = new HashMap<>() {{
+                put("/hello", new HTMLRequestHandler("Welcome Screen!"));
+                put("/ping", new PingRequestHandler());
+                put("/guess", new GuessRequestHandler());
+                put("*", new FileRequestHandler(publicDirectory));
+            }};
+            server.start(port, router);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void start(int port) {
+    public void start(int port, HashMap<String, RequestHandler> router) {
         try {
             serverSocket = new ServerSocket(port);
-            ConcurrentHashMap<String, SessionData> sessionData = new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, SessionData> sessionsData = new ConcurrentHashMap<>();
             while (true)
-                new CleanClientHandler(serverSocket.accept(), publicDirectory, sessionData).start();
+                new CleanClientHandler(serverSocket.accept(), router, sessionsData).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

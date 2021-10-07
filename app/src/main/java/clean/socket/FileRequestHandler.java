@@ -5,22 +5,19 @@ import java.nio.file.Files;
 
 public class FileRequestHandler extends RequestHandler {
     private final String publicDirectory;
-    private final CleanHttpRequest request;
 
-    public FileRequestHandler(OutputStream out, CleanHttpRequest request, String publicDirectory) {
+    public FileRequestHandler(String publicDirectory) {
         this.publicDirectory = publicDirectory;
-        this.request = request;
-        this.out = out;
     }
 
-    public void handle() throws Exception {
+    public void handle(CleanHttpRequest request, OutputStream out) throws Exception {
         File f = new File(publicDirectory + request.getPath() + "/index.html");
         if (f.exists()) {
             FileInputStream fileStream = new FileInputStream(publicDirectory + request.getPath() + "/index.html");
             String responseLength = "Content-Length: " + fileStream.available() + "\r\n";
             String rawResponse = responseStatusHeader + responseTypeHeader + responseLength + responseConnection;
             out.write(rawResponse.getBytes());
-            sendFile(fileStream);
+            sendFile(out, fileStream);
         }
         File dir = new File(publicDirectory + request.getPath());
         if (dir.isDirectory()) {
@@ -42,10 +39,10 @@ public class FileRequestHandler extends RequestHandler {
             String mimeType = "Content-Type:" + Files.probeContentType(dir.toPath()) + "\r\n";
             String rawResponse = responseStatusHeader + mimeType + responseLength + responseConnection;
             out.write(rawResponse.getBytes());
-            sendFile(fileStream);
+            sendFile(out,fileStream);
         }
     }
-    public void sendFile(FileInputStream fin) throws Exception {
+    public void sendFile(OutputStream out, FileInputStream fin) throws Exception {
         byte[] buffer = new byte[1024];
         int bytesRead;
         while ((bytesRead = fin.read(buffer)) != -1) {

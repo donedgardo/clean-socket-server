@@ -2,22 +2,16 @@ package clean.socket;
 
 import java.io.OutputStream;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 
 public class GuessRequestHandler extends RequestHandler {
 
     private String sessionId;
     private SessionData sessionData;
 
-    public GuessRequestHandler(OutputStream out, CleanHttpRequest request, ConcurrentHashMap<String, SessionData> sessions) {
-        this.out = out;
+    public void handle(CleanHttpRequest request, OutputStream out) throws Exception {
         setSessionId(request);
-        setSessionData(sessions);
+        setSessionData(request);
         attemptGuess(request);
-    }
-
-    public void handle() throws Exception {
         String responseHtml = "<html><body><form action='/guess' method='Post'>" +
                 "<p><i>" + sessionData.guessMessage + "</i></p>" +
                 "<label for='guess'>Guess a number from 1 to 100:</label><br/>" +
@@ -37,7 +31,8 @@ public class GuessRequestHandler extends RequestHandler {
         }
     }
 
-    private void setSessionData(ConcurrentHashMap<String, SessionData> sessions) {
+    private void setSessionData(CleanHttpRequest request) {
+        var sessions = request.getSessionData();
         if(sessions.containsKey(sessionId)) {
             sessionData = sessions.get(sessionId);
         } else {
