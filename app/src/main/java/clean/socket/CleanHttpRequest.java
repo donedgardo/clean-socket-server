@@ -3,9 +3,10 @@ package clean.socket;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +21,7 @@ public class CleanHttpRequest {
     private String body;
     private Map<String, String> postData = new HashMap<>();
     private Map<String, String> cookies;
+    private Map<String, String> queryParams;
 
     public CleanHttpRequest(BufferedReader in, ConcurrentHashMap<String, SessionData> sessionsData) throws Exception {
         this.in = in;
@@ -45,6 +47,10 @@ public class CleanHttpRequest {
 
     public Map<String, String> getCookies () {
         return cookies;
+    }
+
+    public Map<String, String> getQueryParams () {
+        return queryParams;
     }
 
     public ConcurrentHashMap<String, SessionData> getSessionData() {
@@ -99,7 +105,12 @@ public class CleanHttpRequest {
         }
         setRequestMethod(requestInfo[0].toUpperCase());
         setPath(requestInfo[1]);
+        setQueryParams(requestInfo[1]);
         setRequestProtocol(requestInfo[2]);
+    }
+
+    private void setQueryParams(String path) throws UnsupportedEncodingException {
+        this.queryParams = parseQueryParams(path);
     }
 
     private void parseAndSetCookies() {
@@ -121,7 +132,25 @@ public class CleanHttpRequest {
     }
 
     private void setPath(String path) {
-        this.path = path;
+        this.path = path.split("\\?")[0];
+    }
+
+    private static Map<String, String> parseQueryParams(String path) throws UnsupportedEncodingException {
+        Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+        System.out.println(path);
+        int q = path.lastIndexOf('?');
+        if (q == -1) {
+            return query_pairs;
+        }
+        String query = path.substring(q + 1);
+        System.out.println(query);
+        if(query == null) return query_pairs;
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+        }
+        return query_pairs;
     }
 
     private void setRequestMethod(String method) {
