@@ -137,13 +137,11 @@ public class CleanHttpRequest {
 
     private static Map<String, String> parseQueryParams(String path) throws UnsupportedEncodingException {
         Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-        System.out.println(path);
         int q = path.lastIndexOf('?');
         if (q == -1) {
             return query_pairs;
         }
         String query = path.substring(q + 1);
-        System.out.println(query);
         if(query == null) return query_pairs;
         String[] pairs = query.split("&");
         for (String pair : pairs) {
